@@ -31,8 +31,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Session configuration
 app.use(session({
-    key: process.env.SESSION_NAME || 'rally_session',
-    secret: process.env.SESSION_SECRET || 'rally_secret_key_2024',
+    key: process.env.SESSION_NAME  ,
+    secret: process.env.SESSION_SECRET ,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,

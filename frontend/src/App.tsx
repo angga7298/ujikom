@@ -6,10 +6,11 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import Home from './pages/Home';
 import GalleryDetail from './pages/GalleryDetail';
+import EditGallery from './pages/EditGallery';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
-
+import About from './pages/About';
 function App() {
   return (
     <Router>
@@ -22,12 +23,22 @@ function App() {
               <Route path="/gallery/:id" element={<GalleryDetail />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path='/About' element={<About/>}/>
 
               <Route
                 path="/admin"
                 element={
                   <ProtectedRoute adminOnly={true}>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/edit/:id"
+                element={
+                  <ProtectedRoute adminOnly={true}>
+                    <EditGallery />
                   </ProtectedRoute>
                 }
               />
