@@ -1,3 +1,5 @@
+// types/index.ts
+
 // User Types
 export interface User {
   id: number;
@@ -47,6 +49,8 @@ export interface Gallery {
   category_name?: string;
   category_type?: 'year' | 'class';
   username?: string;
+  user_liked?: boolean; 
+  likes_count?: number;
 }
 
 export interface CreateGalleryData {
@@ -79,6 +83,7 @@ export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
   data?: T;
+  user?: User; // TAMBAHAN untuk edit profile
   error?: string;
 }
 
@@ -94,7 +99,7 @@ export interface CheckAuthResponse {
   user?: User;
 }
 
-// Context Types
+// Context Types - INI YANG DIPERBAIKI
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -104,6 +109,8 @@ export interface AuthContextType {
   isAdmin: () => boolean;
   isAuthenticated: () => boolean;
   checkAuth: () => Promise<void>;
+  refreshUser?: () => Promise<void>; // Opsional
+  setUser?: (user: User | null) => void; // YANG INI WAJIB DITAMBAH!
 }
 
 // Component Props Types

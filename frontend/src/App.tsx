@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
 import About from './pages/About';
+import EditProfile from './pages/EditProfile';
 function App() {
   return (
     <Router>
@@ -24,6 +25,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path='/About' element={<About/>}/>
+               <Route path='/EditProfile' element={<EditProfile/>}/>
 
               <Route
                 path="/admin"

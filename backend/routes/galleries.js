@@ -6,7 +6,7 @@ const fs = require('fs');
 const db = require('../config/database');
 const { isAdmin } = require('../middleware/auth');
 
-// Multer configuration
+// Multer configuration - Upload ke folder lokal
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadPath = 'uploads/';
@@ -25,7 +25,7 @@ const upload = multer({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif|webp|jfif/;
+        const allowedTypes = /jpeg|jpg|png|gif|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
         const mimetype = allowedTypes.test(file.mimetype);
         
@@ -40,9 +40,20 @@ const upload = multer({
 // Get all galleries
 router.get('/', (req, res) => {
     const { category_id } = req.query;
+    const userId = req.session.user?.id || null;
     
     let sql = `
-        SELECT g.*, c.name as category_name, c.type as category_type, u.username 
+        SELECT g.*, c.name as category_name, c.type as category_type, u.username, 
+        (SELECT COUNT(*) FROM likes WHERE gallery_id = g.id) as likes_count
+    `;
+    
+    if (userId) {
+        sql += `, EXISTS(SELECT 1 FROM likes WHERE gallery_id = g.id AND user_id = ${userId}) as user_liked`;
+    } else {
+        sql += `, FALSE as user_liked`;
+    }
+    
+    sql += `
         FROM galleries g
         JOIN categories c ON g.category_id = c.id
         JOIN users u ON g.user_id = u.id
@@ -72,12 +83,69 @@ router.get('/', (req, res) => {
     });
 });
 
-// Get single gallery
+// Like / Unlike Gallery
+router.post('/:id/like', (req, res) => {
+    const { id } = req.params;
+    const userId = req.session.user?.id;
+
+    if (!userId) {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized: Please login first' 
+        });
+    }
+
+    // Cek apakah user sudah like foto ini
+    const checkSql = 'SELECT * FROM likes WHERE gallery_id = ? AND user_id = ?';
+    
+    db.query(checkSql, [id, userId], (err, results) => {
+        if (err) {
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Server error', 
+                error: err.message 
+            });
+        }
+
+        if (results.length > 0) {
+            // Jika sudah like, maka Unlike (Hapus)
+            const deleteSql = 'DELETE FROM likes WHERE gallery_id = ? AND user_id = ?';
+            db.query(deleteSql, [id, userId], (err) => {
+                if (err) {
+                    return res.status(500).json({ success: false, message: 'Failed to unlike' });
+                }
+                res.json({ success: true, liked: false });
+            });
+        } else {
+            // Jika belum like, maka Like (Insert)
+            const insertSql = 'INSERT INTO likes (gallery_id, user_id) VALUES (?, ?)';
+            db.query(insertSql, [id, userId], (err) => {
+                if (err) {
+                    return res.status(500).json({ success: false, message: 'Failed to like' });
+                }
+                res.json({ success: true, liked: true });
+            });
+        }
+    });
+});
+
+// Get single gallery (SUDAH DIPERBAIKI UNTUK LOAD LIKES SAAT DETAIL)
 router.get('/:id', (req, res) => {
     const { id } = req.params;
+    const userId = req.session.user?.id || null;
+
+    let sql = `
+        SELECT g.*, c.name as category_name, c.type as category_type, u.username,
+        (SELECT COUNT(*) FROM likes WHERE gallery_id = g.id) as likes_count
+    `;
+
+    if (userId) {
+        sql += `, (SELECT COUNT(*) FROM likes WHERE gallery_id = g.id AND user_id = ${userId}) > 0 as user_liked`;
+    } else {
+        sql += `, FALSE as user_liked`;
+    }
     
-    const sql = `
-        SELECT g.*, c.name as category_name, c.type as category_type, u.username 
+    sql += `
         FROM galleries g
         JOIN categories c ON g.category_id = c.id
         JOIN users u ON g.user_id = u.id

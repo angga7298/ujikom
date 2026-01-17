@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../config/database');
 const { isAuthenticated } = require('../middleware/auth');
 
-// Get comments by gallery ID
+// --- 1. GET COMMENTS BY GALLERY ID (Detail Page) ---
 router.get('/gallery/:galleryId', (req, res) => {
     const { galleryId } = req.params;
     
@@ -30,7 +30,7 @@ router.get('/gallery/:galleryId', (req, res) => {
     });
 });
 
-// Create comment (Authenticated users only)
+// --- 2. CREATE COMMENT (Authenticated Users) ---
 router.post('/', isAuthenticated, (req, res) => {
     const { gallery_id, comment_text } = req.body;
     
@@ -59,7 +59,7 @@ router.post('/', isAuthenticated, (req, res) => {
     });
 });
 
-// Delete comment (Owner or Admin)
+// --- 3. DELETE COMMENT (Owner or Admin) ---
 router.delete('/:id', isAuthenticated, (req, res) => {
     const { id } = req.params;
     
@@ -104,6 +104,46 @@ router.delete('/:id', isAuthenticated, (req, res) => {
                 message: 'Forbidden. You can only delete your own comments' 
             });
         }
+    });
+});
+
+// --- 4. GET ALL COMMENTS (Admin Only - Buat Tab Management) ---
+router.get('/all', isAuthenticated, (req, res) => {
+    // Pastikan yang akses cuma Admin
+    if (req.session.user.role !== 'admin') {
+        return res.status(403).json({ 
+            success: false, 
+            message: 'Access denied. Admin only.' 
+        });
+    }
+
+    // Join comment, user, dan gallery biar admin tau komen di gambar apa
+    const sql = `
+        SELECT 
+            c.id, 
+            c.comment_text, 
+            c.created_at,
+            u.username,
+            g.title as gallery_title,
+            g.id as gallery_id
+        FROM comments c
+        JOIN users u ON c.user_id = u.id
+        JOIN galleries g ON c.gallery_id = g.id
+        ORDER BY c.created_at DESC
+    `;
+    
+    db.query(sql, (err, results) => {
+        if (err) {
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Server error', 
+                error: err.message 
+            });
+        }
+        res.json({ 
+            success: true, 
+            data: results 
+        });
     });
 });
 

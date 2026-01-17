@@ -5,6 +5,7 @@ import GalleryCard from '../components/GalleryCard';
 import { Search, Filter, Grid, Loader, ChevronDown } from 'lucide-react';
 import type { Gallery, Category, ApiResponse } from '../types';
 import Slider from '../components/Slider';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 import '../App.css';
 
 const Home = () => {
@@ -29,6 +30,17 @@ const Home = () => {
       }
     } catch (error) {
       console.error('Failed to fetch categories:', error);
+      // SweetAlert Toast untuk error kategori (biar gak nge-block layar pas loading awal)
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: 'Gagal memuat kategori',
+        showConfirmButton: false,
+        timer: 3000,
+        background: '#111827',
+        color: '#fff',
+      });
     }
   };
 
@@ -46,6 +58,15 @@ const Home = () => {
       }
     } catch (error) {
       console.error('Failed to fetch galleries:', error);
+      // SweetAlert Modal untuk error galeri utama
+      Swal.fire({
+        icon: 'error',
+        title: 'Connection Error',
+        text: 'Gagal memuat data galeri. Silakan periksa koneksi internet Anda.',
+        background: '#111827',
+        color: '#fff',
+        confirmButtonColor: '#dc2626',
+      });
     } finally {
       setLoading(false);
     }

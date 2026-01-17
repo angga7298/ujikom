@@ -1,23 +1,23 @@
-import { useState, useEffect } from 'react'; // --- PERUBAHAN: Impor hooks useState dan useEffect ---
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User, LayoutDashboard, Menu, X } from 'lucide-react'; // --- PERUBAHAN: Impor ikon Menu dan X ---
-import test5 from '../assets/test5.png'
+import { LogOut, User, LayoutDashboard, Menu, X } from 'lucide-react';
+import test5 from '../assets/test5.png';
+import Swal from 'sweetalert2';
+
 const Navbar = () => {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  // --- PERUBAHAN: State untuk mengontrol visibilitas navbar dan menu mobile ---
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // --- PERUBAHAN: Logika untuk menyembunyikan/menampilkan navbar saat scroll ---
   const controlNavbar = () => {
     if (typeof window !== 'undefined') {
-      if (window.scrollY > lastScrollY && window.scrollY > 100) { // Scroll ke bawah
+      if (window.scrollY > lastScrollY && window.scrollY > 100) {
         setIsVisible(false);
-      } else { // Scroll ke atas atau di posisi paling atas
+      } else {
         setIsVisible(true);
       }
       setLastScrollY(window.scrollY);
@@ -27,24 +27,40 @@ const Navbar = () => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.addEventListener('scroll', controlNavbar);
-      // Cleanup event listener saat komponen tidak lagi digunakan
       return () => {
         window.removeEventListener('scroll', controlNavbar);
       };
     }
-  }, [lastScrollY]); // Dependency array memastikan effect dijalankan ulang saat lastScrollY berubah
+  }, [lastScrollY]);
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
-    setIsMenuOpen(false); // --- PERUBAHAN: Tutup menu mobile setelah logout ---
+    setIsMenuOpen(false);
+  };
+
+  // --- FUNGSI BARU: Handle Klik Profile dengan SweetAlert2 ---
+  const handleProfileClick = () => {
+    Swal.fire({
+      title: 'Change Profile?',
+      text: 'Do you want to change your profile?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, change it!',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        navigate("/EditProfile");
+        setIsMenuOpen(false);
+      }
+    });
   };
 
   return (
-    // --- PERUBAHAN: Tambahkan class untuk posisi fixed, transisi, dan kontrol visibilitas ---
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="bg-gradient-to-r from-black via-gray-900 to-black shadow-2xl w-full border-b border-gray-800 backdrop-blur-xl">
-        {/* Top accent line */}
         <div className="h-1 bg-gradient-to-r from-transparent via-rally-red to-transparent"></div>
         
         <div className="container-custom">
@@ -54,10 +70,10 @@ const Navbar = () => {
               <div className="relative">
                 <div className="w-12 h-12 bg-gradient-to-br from-rally-red to-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-rally-red/30 transform group-hover:scale-110 transition-transform duration-300">
                   <img
-                  src={test5}
-                  alt="Rally Logo"
-                  className="w-14 h-14 object-contain group-hover:scale-110 transition-transform duration-300"
-                />
+                    src={test5}
+                    alt="Rally Logo"
+                    className="w-14 h-14 object-contain group-hover:scale-110 transition-transform duration-300"
+                  />
                 </div>
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-rally-amber rounded-full animate-pulse"></div>
               </div>
@@ -71,7 +87,6 @@ const Navbar = () => {
               </div>
             </Link>
 
-            {/* --- PERUBAHAN: Tombol Hamburger untuk Mobile --- */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="lg:hidden text-gray-300 hover:text-white focus:outline-none"
@@ -79,15 +94,12 @@ const Navbar = () => {
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
 
-            {/* --- PERUBAHAN: Wrapper untuk Menu Desktop dan Mobile --- */}
             <div className={`${isMenuOpen ? 'block' : 'hidden'} lg:flex lg:items-center lg:space-x-8 absolute lg:relative top-full left-0 right-0 lg:top-auto lg:left-auto lg:right-auto bg-gray-900 lg:bg-transparent border-t border-gray-800 lg:border-t-0`}>
               
-              {/* Navigation Items (Desktop & Mobile) */}
               <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-8 p-4 lg:p-0 w-full lg:w-auto">
-                {/* Gallery Link */}
                 <Link
                   to="/"
-                  onClick={() => setIsMenuOpen(false)} // --- PERUBAHAN: Tutup menu setelah klik ---
+                  onClick={() => setIsMenuOpen(false)}
                   className="relative group flex items-center space-x-2 text-gray-300 hover:text-white transition-all duration-300 font-bold text-sm uppercase tracking-wider py-2 lg:py-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,10 +109,9 @@ const Navbar = () => {
                   <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-rally-red to-rally-amber group-hover:w-full transition-all duration-300"></div>
                 </Link>
 
-                {/* About Link */}
                 <Link
-                  to="/About "
-                  onClick={() => setIsMenuOpen(false)} // --- PERUBAHAN: Tutup menu setelah klik ---
+                  to="/About"
+                  onClick={() => setIsMenuOpen(false)}
                   className="relative group flex items-center space-x-2 text-gray-300 hover:text-white transition-all duration-300 font-bold text-sm uppercase tracking-wider py-2 lg:py-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,11 +123,10 @@ const Navbar = () => {
 
                 {user ? (
                   <>
-                    {/* Admin Link */}
                     {isAdmin() && (
                       <Link
                         to="/admin"
-                        onClick={() => setIsMenuOpen(false)} // --- PERUBAHAN: Tutup menu setelah klik ---
+                        onClick={() => setIsMenuOpen(false)}
                         className="relative group flex items-center space-x-2 px-6 py-3 my-2 lg:my-0 bg-gradient-to-r from-yellow-400/10 via-yellow-500/10 to-yellow-400/10 border-2 border-yellow-500/50 rounded-lg hover:from-yellow-400/20 hover:via-yellow-500/20 hover:to-yellow-400/20 hover:border-yellow-500/70 hover:shadow-[0_0_20px_rgba(255,255,0,0.5)] transition-all duration-500 overflow-hidden"
                       >
                         <LayoutDashboard className="w-5 h-5 text-yellow-500 drop-shadow-lg" />
@@ -126,17 +136,20 @@ const Navbar = () => {
                       </Link>
                     )}
 
-                    {/* User Info & Logout Section */}
                     <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4 pt-4 lg:pt-0 border-t border-gray-800 lg:border-t-0">
-                      {/* User Profile */}
-                      <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-gray-800/50 to-black/50 border border-gray-700 rounded-lg backdrop-blur-sm">
+                      
+                      {/* --- UPDATE: User Profile Button --- */}
+                     <button
+                      onClick={handleProfileClick}
+                        className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-gray-800/50 to-black/50 border border-gray-700 rounded-lg backdrop-blur-sm hover:border-rally-red hover:bg-gray-700/50 transition-all duration-300 cursor-pointer group"
+                        >
                         <div className="relative">
-                          <div className="w-8 h-8 bg-gradient-to-br from-rally-red to-red-600 rounded-full flex items-center justify-center">
+                          <div className="w-8 h-8 bg-gradient-to-br from-rally-red to-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                             <User className="w-4 h-4 text-white" />
                           </div>
                           <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-gray-900 rounded-full"></div>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col text-left">
                           <span className="text-white font-bold text-sm leading-none">{user.username}</span>
                           {isAdmin() ? (
                             <span className="text-[10px] text-rally-amber font-black uppercase tracking-wider mt-0.5">
@@ -153,9 +166,9 @@ const Navbar = () => {
                             Admin
                           </span>
                         )}
-                      </div>
+                     </button>
+                      {/* --------------------------------- */}
 
-                      {/* Logout Button */}
                       <button
                         onClick={handleLogout}
                         className="group flex items-center justify-center space-x-2 px-4 py-2 bg-gray-800/50 hover:bg-rally-red/20 border border-gray-700 hover:border-rally-red/50 rounded-lg transition-all duration-300"
@@ -169,10 +182,9 @@ const Navbar = () => {
                   </>
                 ) : (
                   <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4 pt-4 lg:pt-0 border-t border-gray-800 lg:border-t-0">
-                    {/* Login Link */}
                     <Link
                       to="/login"
-                      onClick={() => setIsMenuOpen(false)} // --- PERUBAHAN: Tutup menu setelah klik ---
+                      onClick={() => setIsMenuOpen(false)}
                       className="relative group flex items-center space-x-2 text-gray-300 hover:text-white transition-all duration-300 font-bold text-sm uppercase tracking-wider"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,10 +194,9 @@ const Navbar = () => {
                       <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-rally-red to-rally-amber group-hover:w-full transition-all duration-300"></div>
                     </Link>
 
-                    {/* Register Button */}
                     <Link 
                       to="/register"
-                      onClick={() => setIsMenuOpen(false)} // --- PERUBAHAN: Tutup menu setelah klik ---
+                      onClick={() => setIsMenuOpen(false)}
                       className="group relative overflow-hidden px-6 py-2.5 bg-gradient-to-r from-rally-red via-red-600 to-rally-red hover:from-red-600 hover:via-rally-red hover:to-red-600 text-white font-black rounded-lg shadow-lg shadow-rally-red/30 hover:shadow-rally-red/50 transform hover:scale-105 transition-all duration-300 text-sm uppercase tracking-wider"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
@@ -203,7 +214,6 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Bottom decorative line with speed effect */}
         <div className="h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
       </div>
     </nav>

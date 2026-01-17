@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import type {FormEvent, ChangeEvent} from 'react'
+import type { FormEvent, ChangeEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { ArrowLeft, Loader, Check, X, Upload as UploadIcon } from 'lucide-react';
 import type { Gallery, Category, ApiResponse } from '../types';
+import Swal from 'sweetalert2'; // 1. Import SweetAlert2
 
 const EditGallery = () => {
   const { id } = useParams<{ id: string }>();
@@ -55,7 +56,15 @@ const EditGallery = () => {
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
-      alert('Failed to load gallery');
+      // 2. Ganti alert jadi Swal.fire
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to load',
+        text: 'Gagal memuat data gallery. Kembali ke halaman admin...',
+        background: '#111827', // gray-900
+        color: '#fff',
+        confirmButtonColor: '#dc2626', // red-600
+      });
       navigate('/admin');
     } finally {
       setLoading(false);
@@ -96,11 +105,28 @@ const EditGallery = () => {
       });
 
       if (response.data.success) {
-        alert('✅ Gallery updated successfully!');
+        // 3. Success Alert
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: 'Data gallery berhasil diperbarui.',
+          timer: 2000,
+          showConfirmButton: false,
+          background: '#111827',
+          color: '#fff',
+        });
         navigate(`/gallery/${id}`);
       }
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to update gallery');
+      // 4. Error Alert
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Gagal',
+        text: error.response?.data?.message || 'Terjadi kesalahan saat mengupdate gallery.',
+        background: '#111827',
+        color: '#fff',
+        confirmButtonColor: '#dc2626',
+      });
     } finally {
       setUpdating(false);
     }
@@ -108,197 +134,199 @@ const EditGallery = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900">
-        <div className="w-20 h-20 mb-4 relative">
-          <div className="absolute inset-0 rounded-full border-t-4 border-r-4 border-red-600 animate-spin"></div>
-          <div className="absolute inset-2 rounded-full border-b-4 border-l-4 border-white animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-        </div>
-        <Loader className="w-12 h-12 text-red-600 animate-spin" />
-        <p className="text-white font-bold text-xl mt-4 uppercase tracking-wider">
-          Loading...
-        </p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <Loader className="w-12 h-12 text-rally-red animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-8 bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
+    <div className="min-h-screen bg-gray-900">
+      <div className="container mx-auto px-4 py-8">
+        
+        {/* Header & Back Button */}
+        <div className="flex items-center justify-between mb-8">
           <button
             onClick={() => navigate(`/gallery/${id}`)}
-            className="inline-flex items-center space-x-3 bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all mb-6 font-bold uppercase tracking-wide"
+            className="inline-flex items-center space-x-2 text-gray-300 hover:text-rally-red transition-all duration-300 group"
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back</span>
+            <ArrowLeft className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Back to Gallery</span>
           </button>
-
-          <div className="bg-gradient-to-r from-red-600 to-red-800 p-6 rounded-lg shadow-2xl">
-            <h1 className="text-5xl font-black text-white uppercase tracking-wider" style={{ fontFamily: 'Racing Sans One, Impact, sans-serif' }}>
-              Edit Gallery
-            </h1>
-            <p className="text-white font-bold mt-2 uppercase tracking-wide">
-              Update classic rally car details
-            </p>
+          
+          <div className="bg-gray-800 rounded-full px-4 py-2 border border-gray-700">
+             <span className="text-gray-400 text-sm font-semibold">EDIT MODE</span>
           </div>
         </div>
 
-        {/* Form */}
-        <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
-          <div className="bg-gradient-to-r from-red-600 to-red-800 h-2"></div>
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
-            {/* Current Image */}
-            <div>
-              <label className="block text-gray-800 font-bold uppercase tracking-wide mb-3 text-sm">
-                Current Image
-              </label>
-              <div className="rounded-lg overflow-hidden shadow-lg">
-                <img
-                  src={previewImage || `${API_URL}${currentImage}`}
-                  alt="Current"
-                  className="w-full h-64 object-cover"
-                />
-              </div>
+        {/* Main Form Container */}
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-gray-800 rounded-xl p-6 sm:p-8 shadow-2xl border border-gray-700">
+            
+            {/* Form Header */}
+            <div className="border-b border-gray-700 pb-6 mb-6">
+              <h1 className="text-3xl font-bold text-white mb-2">Edit Gallery Details</h1>
+              <p className="text-gray-400">Update information about this rally machine.</p>
             </div>
 
-            {/* New Image Upload */}
-            <div>
-              <label className="block text-gray-800 font-bold uppercase tracking-wide mb-3 text-sm">
-                Upload New Image (Optional)
-              </label>
-              <div className="relative">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label
-                  htmlFor="image-upload"
-                  className="flex items-center justify-center space-x-3 bg-gray-800 hover:bg-gray-700 text-white px-6 py-4 rounded-lg cursor-pointer transition-all font-bold uppercase tracking-wide"
-                >
-                  <UploadIcon className="w-5 h-5" />
-                  <span>{newImage ? newImage.name : 'Choose New Image'}</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Category */}
-            <div>
-              <label className="block text-gray-800 font-bold uppercase tracking-wide mb-3 text-sm">
-                Category *
-              </label>
-              <select
-                name="category_id"
-                value={formData.category_id}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all"
-              >
-                <option value="">SELECT CATEGORY</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name} ({cat.type})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Title */}
-            <div>
-              <label className="block text-gray-800 font-bold uppercase tracking-wide mb-3 text-sm">
-                Title *
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all"
-                placeholder="E.G., AUDI QUATTRO S1 E2"
-              />
-            </div>
-
-            {/* Car Model */}
-            <div>
-              <label className="block text-gray-800 font-bold uppercase tracking-wide mb-3 text-sm">
-                Car Model
-              </label>
-              <input
-                type="text"
-                name="car_model"
-                value={formData.car_model}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all"
-                placeholder="E.G., AUDI QUATTRO S1 E2"
-              />
-            </div>
-
-            {/* Driver Name */}
-            <div>
-              <label className="block text-gray-800 font-bold uppercase tracking-wide mb-3 text-sm">
-                Driver Name
-              </label>
-              <input
-                type="text"
-                name="driver_name"
-                value={formData.driver_name}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all"
-                placeholder="E.G., MICHELE MOUTON"
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-gray-800 font-bold uppercase tracking-wide mb-3 text-sm">
-                Description
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all min-h-[150px]"
-                placeholder="DESCRIBE THE LEGENDARY MACHINE..."
-              />
-            </div>
-
-            {/* Racing Stripes Divider */}
-            <div className="h-2 bg-gradient-to-r from-red-600 via-white to-red-600"></div>
-
-            {/* Buttons */}
-            <div className="flex space-x-4">
-              <button
-                type="submit"
-                disabled={updating}
-                className="flex-1 flex items-center justify-center space-x-3 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-bold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
-              >
-                {updating ? (
-                  <>
-                    <Loader className="w-6 h-6 animate-spin" />
-                    <span>Updating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-6 h-6" />
-                    <span>Update Gallery</span>
-                  </>
-                )}
-              </button>
+            <form onSubmit={handleSubmit} className="space-y-6">
               
-              <button
-                type="button"
-                onClick={() => navigate(`/gallery/${id}`)}
-                className="flex items-center justify-center space-x-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all uppercase tracking-wide"
-              >
-                <X className="w-6 h-6" />
-                <span>Cancel</span>
-              </button>
-            </div>
-          </form>
+              {/* Image Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Current Image */}
+                <div>
+                  <label className="block text-gray-300 font-bold uppercase text-sm mb-3">
+                    Current Image
+                  </label>
+                  <div className="rounded-lg overflow-hidden border border-gray-700 bg-gray-900/50">
+                    <img
+                      src={previewImage || `${API_URL}${currentImage}`}
+                      alt="Current"
+                      className="w-full h-48 object-cover"
+                      onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/800x600?text=No+Image')}
+                    />
+                  </div>
+                </div>
+
+                {/* Upload New */}
+                <div>
+                  <label className="block text-gray-300 font-bold uppercase text-sm mb-3">
+                    Replace Image (Optional)
+                  </label>
+                  <div className="relative h-full min-h-[192px] border-2 border-dashed border-gray-600 hover:border-rally-red bg-gray-700/30 rounded-lg flex flex-col items-center justify-center transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      id="image-upload"
+                    />
+                    <label htmlFor="image-upload" className="cursor-pointer text-center p-4">
+                      <UploadIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-300 text-sm font-medium">
+                        {newImage ? newImage.name : 'Click to upload new image'}
+                      </p>
+                      <p className="text-gray-500 text-xs mt-1">JPG, PNG, GIF up to 5MB</p>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-gray-300 font-bold uppercase text-sm mb-3">
+                  Category <span className="text-rally-red">*</span>
+                </label>
+                <select
+                  name="category_id"
+                  value={formData.category_id}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 rounded-lg bg-gray-700/50 border border-gray-600 text-white focus:ring-2 focus:ring-rally-red focus:border-transparent outline-none transition-all"
+                >
+                  <option value="" className="text-gray-400">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name} ({cat.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Title */}
+              <div>
+                <label className="block text-gray-300 font-bold uppercase text-sm mb-3">
+                  Title <span className="text-rally-red">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                  placeholder="E.g., AUDI QUATTRO S1 E2"
+                  className="w-full px-4 py-3 rounded-lg bg-gray-700/50 border border-gray-600 text-white placeholder-gray-500 focus:ring-2 focus:ring-rally-red focus:border-transparent outline-none transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Car Model */}
+                <div>
+                  <label className="block text-gray-300 font-bold uppercase text-sm mb-3">
+                    Car Model
+                  </label>
+                  <input
+                    type="text"
+                    name="car_model"
+                    value={formData.car_model}
+                    onChange={handleChange}
+                    placeholder="E.g., AUDI QUATTRO S1"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-700/50 border border-gray-600 text-white placeholder-gray-500 focus:ring-2 focus:ring-rally-red focus:border-transparent outline-none transition-all"
+                  />
+                </div>
+
+                {/* Driver Name */}
+                <div>
+                  <label className="block text-gray-300 font-bold uppercase text-sm mb-3">
+                    Driver Name
+                  </label>
+                  <input
+                    type="text"
+                    name="driver_name"
+                    value={formData.driver_name}
+                    onChange={handleChange}
+                    placeholder="E.g., Michele Mouton"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-700/50 border border-gray-600 text-white placeholder-gray-500 focus:ring-2 focus:ring-rally-red focus:border-transparent outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-gray-300 font-bold uppercase text-sm mb-3">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Describe the legendary machine..."
+                  className="w-full px-4 py-3 rounded-lg bg-gray-700/50 border border-gray-600 text-white placeholder-gray-500 focus:ring-2 focus:ring-rally-red focus:border-transparent outline-none transition-all min-h-[120px]"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-6 border-t border-gray-700 flex space-x-4">
+                <button
+                  type="submit"
+                  disabled={updating}
+                  className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-rally-red to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {updating ? (
+                    <>
+                      <Loader className="w-5 h-5 animate-spin" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-5 h-5" />
+                      <span>Update Gallery</span>
+                    </>
+                  )}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => navigate(`/gallery/${id}`)}
+                  className="flex items-center justify-center space-x-2 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300"
+                >
+                  <X className="w-5 h-5" />
+                  <span>Cancel</span>
+                </button>
+              </div>
+
+            </form>
+          </div>
         </div>
       </div>
     </div>

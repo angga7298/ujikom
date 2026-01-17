@@ -3,17 +3,27 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 import CommentSection from '../components/CommentSection';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, Calendar, Tag, User, Edit, Trash2, Loader } from 'lucide-react';
+import { ArrowLeft, Calendar, Tag, User, Edit, Trash2, Loader, Heart } from 'lucide-react';
 import { format } from 'date-fns';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 import type { Gallery, ApiResponse } from '../types';
 
 const GalleryDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
+  
+  // State Gallery Utama
   const [gallery, setGallery] = useState<Gallery | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+  
+  // --- State Baru untuk Fitur Likes ---
+  const [liked, setLiked] = useState<boolean>(false);
+  const [likesCount, setLikesCount] = useState<number>(0);
+  const [likeLoading, setLikeLoading] = useState<boolean>(false);
+  // ----------------------------------
+
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
@@ -26,7 +36,12 @@ const GalleryDetail = () => {
     try {
       const response = await api.get<ApiResponse<Gallery>>(`/api/galleries/${id}`);
       if (response.data.success && response.data.data) {
-        setGallery(response.data.data);
+        const data = response.data.data;
+        setGallery(data);
+        
+        // Set state likes berdasarkan response dari backend
+        setLiked(data.user_liked || false);
+        setLikesCount(data.likes_count || 0);
       }
     } catch (error) {
       console.error('Failed to fetch gallery:', error);
@@ -36,18 +51,84 @@ const GalleryDetail = () => {
     }
   };
 
+  // --- Handler Like ---
+  const handleLike = async (): Promise<void> => {
+    if (!user) {
+      // Ganti alert jadi Swal
+      Swal.fire({
+        icon: 'warning',
+        title: 'Login Required',
+        text: 'Silakan login terlebih dahulu untuk menyukai foto ini.',
+        background: '#111827',
+        color: '#fff',
+        confirmButtonColor: '#dc2626',
+      });
+      return;
+    }
+    if (likeLoading) return;
+
+    setLikeLoading(true);
+    
+    // Optimistic UI Update
+    const newLikedStatus = !liked;
+    setLiked(newLikedStatus);
+    setLikesCount(prev => newLikedStatus ? prev + 1 : prev - 1);
+
+    try {
+      await api.post(`/api/galleries/${id}/like`);
+    } catch (error) {
+      // Revert on error
+      setLiked(!newLikedStatus);
+      setLikesCount(prev => newLikedStatus ? prev - 1 : prev + 1);
+      console.error('Failed to toggle like', error);
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+  // --------------------
+
   const handleDelete = async (): Promise<void> => {
-    if (!confirm('Are you sure you want to delete this gallery?')) return;
+    // Ganti confirm() jadi Swal.fire dengan option showCancelButton
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#4b5563', // gray-600
+      confirmButtonText: 'Yes, delete it!',
+      background: '#111827',
+      color: '#fff',
+    });
+
+    if (!result.isConfirmed) return;
 
     setDeleteLoading(true);
     try {
       const response = await api.delete<ApiResponse>(`/api/galleries/${id}`);
       if (response.data.success) {
-        alert('Gallery deleted successfully');
+        // Success Alert
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: 'Gallery has been deleted.',
+          timer: 1500,
+          showConfirmButton: false,
+          background: '#111827',
+          color: '#fff',
+        });
         navigate('/');
       }
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to delete gallery');
+      // Error Alert
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed',
+        text: error.response?.data?.message || 'Failed to delete gallery',
+        background: '#111827',
+        color: '#fff',
+        confirmButtonColor: '#dc2626',
+      });
     } finally {
       setDeleteLoading(false);
     }
@@ -147,6 +228,32 @@ const GalleryDetail = () => {
                     <span className="text-lg">Driver: {gallery.driver_name}</span>
                   </div>
                 )}
+
+                {/* --- TOMBOL LIKE --- */}
+                <div className="mb-6">
+                  <button
+                    onClick={handleLike}
+                    disabled={likeLoading}
+                    className={`
+                      w-full flex items-center justify-between px-4 py-3 rounded-lg font-bold transition-all duration-300
+                      hover:scale-[1.02] active:scale-95 border
+                      ${liked 
+                        ? 'bg-red-500/20 text-red-500 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' 
+                        : 'bg-gray-700/50 text-gray-400 border-gray-600 hover:bg-gray-700 hover:text-white hover:border-gray-500'}
+                    `}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Heart 
+                        className={`w-6 h-6 transition-transform duration-300 ${liked ? 'fill-rally-red text-rally-red scale-110' : ''}`} 
+                      />
+                      <span>{liked ? 'Liked' : 'Like This Photo'}</span>
+                    </div>
+                    <span className={`px-2 py-1 rounded-md text-sm font-bold ${liked ? 'bg-rally-red text-white' : 'bg-gray-600 text-gray-300'}`}>
+                      {likesCount}
+                    </span>
+                  </button>
+                </div>
+                {/* -------------------- */}
 
                 <div className="mb-6">
                   <p className="text-gray-300 leading-relaxed bg-gray-700/20 rounded-lg p-4">

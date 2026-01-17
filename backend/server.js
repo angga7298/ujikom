@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth');
 const categoryRoutes = require('./routes/categories');
 const galleryRoutes = require('./routes/galleries');
 const commentRoutes = require('./routes/comments');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -48,6 +49,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/galleries', galleryRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/admin', adminRoutes); 
 
 // Health check
 app.get('/api/health', (req, res) => {

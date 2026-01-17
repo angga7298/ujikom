@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect  } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import api from '../api/axios';
 import type { User, AuthContextType, AuthResponse, CheckAuthResponse } from '../types'
@@ -40,7 +40,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       if (response.data.success && response.data.user) {
         setUser(response.data.user);
-        return { success: true };
+        return { 
+          success: true,
+          user: response.data.user 
+        };
       }
       return { success: false, message: 'Login failed' };
     } catch (error: any) {
@@ -92,6 +95,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return user !== null;
   };
 
+  // TAMBAH FUNGSI INI UNTUK UPDATE USER
+  const updateUser = (userData: User | null) => {
+    setUser(userData);
+  };
+
   const value: AuthContextType = {
     user,
     loading,
@@ -101,6 +109,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isAdmin,
     isAuthenticated,
     checkAuth,
+    setUser: updateUser, // TAMBAHKAN INI
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

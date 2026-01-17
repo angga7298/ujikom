@@ -344,15 +344,16 @@ const About = () => {
                     Join thousands of rally enthusiasts and explore our growing collection of 
                     breathtaking motorsport photography. New content added weekly!
                   </p>
-                  
                   <div className="flex flex-wrap justify-center gap-4">
+                  <Link
+                  to={'/'}>
                     <button className="group relative overflow-hidden px-8 py-3 bg-gradient-to-r from-rally-red via-red-600 to-rally-red hover:from-red-600 hover:via-rally-red hover:to-red-600 text-white font-black rounded-lg shadow-lg shadow-rally-red/30 hover:shadow-rally-red/50 transform hover:scale-105 transition-all duration-300 text-sm uppercase tracking-wider">
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
                       <span className="relative z-10 flex items-center justify-center space-x-2">
                         <span>Browse Gallery</span>
                         <Camera className="w-4 h-4 transform group-hover:scale-110 transition-transform" />
                       </span>
-                    </button>
+                    </button></Link>
                     
                     <button className="group relative overflow-hidden px-8 py-3 bg-gray-800/50 hover:bg-gray-800/80 border border-gray-700 hover:border-gray-600 text-white font-black rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 text-sm uppercase tracking-wider">
                       <span className="relative z-10 flex items-center justify-center space-x-2">
